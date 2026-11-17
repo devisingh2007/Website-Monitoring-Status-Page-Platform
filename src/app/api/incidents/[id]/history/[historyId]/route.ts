@@ -4,16 +4,16 @@ import connectDB from "@/lib/db";
 import { Incident, IncidentHistory } from "@/models";
 
 type RouteContext = {params: Promise<{id: string;
-    updateId: string;}>;
+    historyId: string;}>;
 };
 
 export async function DELETE(request: Request,{ params }: RouteContext) {
   try {
     await connectDB();
 
-    const { id, updateId } = await params;
+    const { id, historyId } = await params;
 
-    if (!mongoose.Types.ObjectId.isValid(id) ||!mongoose.Types.ObjectId.isValid(updateId)) {
+    if (!mongoose.Types.ObjectId.isValid(id) ||!mongoose.Types.ObjectId.isValid(historyId)) {
       return NextResponse.json(
         { success: false, message: "Invalid ID" },
         { status: 400 }
@@ -30,7 +30,7 @@ export async function DELETE(request: Request,{ params }: RouteContext) {
     }
 
     const update = await IncidentHistory.findOneAndDelete({
-      _id: updateId,
+      _id: historyId,
       incidentId: incident._id,
     });
 
@@ -43,11 +43,11 @@ export async function DELETE(request: Request,{ params }: RouteContext) {
 
     return NextResponse.json({
       success: true,
-      message: "Incident update deleted successfully",
+      message: "Incident update history deleted successfully",
       data: update
     });
   } catch (error) {
-    console.error("DELETE Incident Update Error:", error);
+    console.error("DELETE Incident Update history Error:", error);
 
     return NextResponse.json(
       {

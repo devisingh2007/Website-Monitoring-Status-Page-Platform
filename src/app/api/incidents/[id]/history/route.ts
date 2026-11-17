@@ -45,12 +45,12 @@ export async function GET(_request: Request,{ params }: RouteContext) {
     );
 
   } catch (error) {
-    console.error("GET Incident Updates Error:", error);
+    console.error("GET Incident Updates history Error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to fetch incident updates",
+        message: "Failed to fetch incident update history",
       },
       { status: 500 }
     );
@@ -118,7 +118,7 @@ export async function POST(request: Request,{ params }: RouteContext) {
     return NextResponse.json(
       {
         success: true,
-        message: "Incident update added successfully",
+        message: "Incident update history added successfully",
         data: {
           update,
           incident

@@ -218,7 +218,7 @@ export async function DELETE(_request: Request,{ params }: RouteContext) {
     return NextResponse.json(
       {
         success: true,
-        message: "Incident and its updates deleted successfully"
+        message: "Incident and its updates history deleted successfully"
       },
       { status: 200 }
     );
