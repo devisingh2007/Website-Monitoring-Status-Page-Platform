@@ -3,6 +3,7 @@ import connectDB from "../db";
 import { CheckResult } from '@/models';
 import {Monitor} from "@/models";
 import { performHealthCheck } from "./health-check";
+import { MonitorStatus } from '../../models/Monitor';
 
 
 export async function runMonitorCheck(monitorId:string) {
@@ -38,10 +39,28 @@ export async function runMonitorCheck(monitorId:string) {
         status:result.status,
         statusCode:result.statusCode,
         responseTime:result.responseTime,
+        errorMessage:result.errorMessage??undefined,
     })
+
+    if(result.status==="success")
+    {
+        monitor.failureCount=0;
+        monitor.status="operational"
+    }else{
+        monitor.failureCount+=1;
+        if(monitor.failureCount>=3){
+            monitor.status="down";
+        }
+    }
+monitor.lastCheckedAt=new Date();
+monitor.lastResponseTime=result.responseTime;
+
+await monitor.save();
 
     return {
         monitorId:monitor._id,
         checkResult,
-    }
+        MonitorStatus:monitor.status,
+        failureCount:monitor.failureCount,
+    };
 }
