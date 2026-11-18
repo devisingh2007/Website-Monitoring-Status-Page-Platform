@@ -20,7 +20,7 @@ const CheckResultSchema = new Schema<CheckResultLook>(
     },
     status: {
       type: String,
-      enum: ["Success", "failure"],
+      enum: ["success", "failure"],
       required: [true, "Ceck status is required"],
     },
     statusCode: {

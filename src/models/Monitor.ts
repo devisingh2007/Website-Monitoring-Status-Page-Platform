@@ -15,8 +15,8 @@ export interface MonitorLook {
   enabled: boolean;
   failureCount: number;
   nextCheckAt: Date;
-  lastCheckedAt?: Date;
-  lastResponseTime?: number;
+  lastCheckedAt: Date | null;
+lastResponseTime: number | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -87,7 +87,11 @@ const MonitorSchema = new Schema<MonitorLook>(
     },
     failureCount: {
       type: Number,
-      min: 0,
+      min: [0, "Failure count cannot be negative"],
+      validate: {
+        validator: Number.isInteger,
+        message: "Failure count must be an integer",
+      },
       default: 0,
     },
     nextCheckAt: {

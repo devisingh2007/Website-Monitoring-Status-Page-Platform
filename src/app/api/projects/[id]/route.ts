@@ -2,8 +2,6 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import { Project } from "@/models";
 import mongoose from "mongoose";
-import { success } from "zod";
-import next from "next";
 
 type RouteContext = {
   params: Promise<{ id: string }>;
