@@ -1,0 +1,125 @@
+{
+  "success": true,
+  "data": {
+    "summary": {
+      "totalMonitors": 2,
+      "operationalMonitors": 1,
+      "downMonitors": 0,
+      "pausedMonitors": 1,
+      "activeIncidents": 0
+    },
+    "uptime": {
+      "percentage": null,
+      "totalChecks": 0,
+      "successfulChecks": 0,
+      "period": "24 hours"
+    },
+    "recentIncidents": [
+      {
+        "_id": "6afb4346919cab572d290ea7",
+        "monitorId": {
+          "_id": "6afae68700fb37c11d0c3dd8",
+          "name": "Google Website",
+          "url": "https://google.com/",
+          "type": "website",
+          "status": "operational"
+        },
+        "title": "Google Website is Down",
+        "description": "Website is not responding properly.",
+        "severity": "critical",
+        "status": "resolved",
+        "resolvedAt": "2026-11-18T10:53:58.807Z",
+        "startedAt": "2026-11-16T17:54:14.115Z",
+        "createdAt": "2026-11-16T17:54:14.115Z",
+        "updatedAt": "2026-11-18T10:53:58.808Z"
+      }
+    ],
+    "recentChecks": [
+      {
+        "_id": "6afd90b7d796ea3208ed0270",
+        "monitorId": {
+          "_id": "6afae68700fb37c11d0c3dd8",
+          "name": "Google Website",
+          "url": "https://google.com/",
+          "type": "website",
+          "status": "operational"
+        },
+        "status": "success",
+        "statusCode": 301,
+        "responseTime": 430,
+        "errorMessage": "",
+        "checkedAt": "2026-11-18T11:49:11.773Z",
+        "createdAt": "2026-11-18T11:49:11.779Z",
+        "updatedAt": "2026-11-18T11:49:11.779Z"
+      },
+      {
+        "_id": "6afd844b5d87847bd38a3429",
+        "monitorId": {
+          "_id": "6afae68700fb37c11d0c3dd8",
+          "name": "Google Website",
+          "url": "https://google.com/",
+          "type": "website",
+          "status": "operational"
+        },
+        "status": "success",
+        "statusCode": 301,
+        "responseTime": 405,
+        "errorMessage": "",
+        "checkedAt": "2026-11-18T10:56:11.331Z",
+        "createdAt": "2026-11-18T10:56:11.332Z",
+        "updatedAt": "2026-11-18T10:56:11.332Z"
+      },
+      {
+        "_id": "6afd83f35d87847bd38a3428",
+        "monitorId": {
+          "_id": "6afae68700fb37c11d0c3dd8",
+          "name": "Google Website",
+          "url": "https://google.com/",
+          "type": "website",
+          "status": "operational"
+        },
+        "status": "success",
+        "statusCode": 301,
+        "responseTime": 482,
+        "errorMessage": "",
+        "checkedAt": "2026-11-18T10:54:43.075Z",
+        "createdAt": "2026-11-18T10:54:43.075Z",
+        "updatedAt": "2026-11-18T10:54:43.075Z"
+      },
+      {
+        "_id": "6afd83c65d87847bd38a3426",
+        "monitorId": {
+          "_id": "6afae68700fb37c11d0c3dd8",
+          "name": "Google Website",
+          "url": "https://google.com/",
+          "type": "website",
+          "status": "operational"
+        },
+        "status": "success",
+        "statusCode": 301,
+        "responseTime": 491,
+        "errorMessage": "",
+        "checkedAt": "2026-11-18T10:53:58.603Z",
+        "createdAt": "2026-11-18T10:53:58.607Z",
+        "updatedAt": "2026-11-18T10:53:58.607Z"
+      },
+      {
+        "_id": "6afb1e60919cab572d290ea5",
+        "monitorId": {
+          "_id": "6afae68700fb37c11d0c3dd8",
+          "name": "Google Website",
+          "url": "https://google.com/",
+          "type": "website",
+          "status": "operational"
+        },
+        "status": "success",
+        "statusCode": 200,
+        "responseTime": 245,
+        "errorMessage": "",
+        "checkedAt": "2026-11-16T15:16:48.787Z",
+        "createdAt": "2026-11-16T15:16:48.795Z",
+        "updatedAt": "2026-11-16T15:16:48.795Z"
+      }
+    ]
+  }
+}

@@ -17,8 +17,8 @@ if (!cached) {
 async function connectDB() {
   if (cached.connection) return cached.connection;   // pehle se connected hai to wahi de dega 
 
-  if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI as string, {
+  if (!cached.promise) { 
+    cached.promise = mongoose.connect(MONGODB_URI as string, { // cached.promise  //!Reuses an ongoing connection
       bufferCommands: false,
     });
   }

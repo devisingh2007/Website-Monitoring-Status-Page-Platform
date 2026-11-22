@@ -1,37 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Complete Pages List
 
-## Getting Started
 
-First, run the development server:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## B. Main Dashboard
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- [ ] **Dashboard** — `/dashboard` — Overall monitoring overview
+- [ ] **Monitors** — `/monitors` — All registered websites and APIs
+- [ ] **Add Monitor** — `/monitors/new` — Register new endpoint
+- [ ] **Monitor Details** — `/monitors/[id]` — Uptime, response time, history
+- [ ] **Edit Monitor** — `/monitors/[id]/edit` — Update monitor configuration
+- [ ] **Monitoring History** — `/monitors/[id]/history` — Historical check results
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## C. Incident Management
 
-## Learn More
+- [ ] **All Incidents** — `/incidents` — List of all incidents
+- [ ] **Incident Details** — `/incidents/[id]` — Incident timeline and details
+- [ ] **Create Incident** — `/incidents/new` — Manually create incident
+- [ ] **Edit Incident** — `/incidents/[id]/edit` — Update incident description
+- [ ] **Incident History** — `/incidents/history` — Resolved and past incidents
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## D. Projects & Groups
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- [ ] **Projects** — `/projects` — All projects
+- [ ] **Create Project** — `/projects/new` — Create project
+- [ ] **Project Details** — `/projects/[id]` — Project monitors and analytics
+- [ ] **Edit Project** — `/projects/[id]/edit` — Update project
+- [ ] **Groups** — `/groups` — Organize monitors
+- [ ] **Group Details** — `/groups/[id]` — Group-specific monitors
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## E. Public Status Pages
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-# Website-Monitoring-Status-Page-Platform
+- [ ] **Status Pages** — `/status-pages` — Manage public status pages
+- [ ] **Create Status Page** — `/status-pages/new` — Generate public page
+- [ ] **Edit Status Page** — `/status-pages/[id]/edit` — Customize status page
+- [ ] **Status Page Preview** — `/status-pages/[id]/preview` — Preview public page
+- [ ] **Public Status Page** — `/status/[slug]` — Publicly accessible service status
+
+---
+
+## F. Analytics & Reports
+
+- [ ] **Analytics Overview** — `/analytics` — Overall uptime analytics
+- [ ] **Uptime Reports** — `/analytics/uptime` — Uptime percentages
+- [ ] **Response Time** — `/analytics/response-time` — Response-time charts
+- [ ] **Availability History** — `/analytics/availability` — Successful and failed checks
+
+---
+
+## G. Notifications
+
+- [ ] **Notifications** — `/notifications` — Notification history
+- [ ] **Notification Settings** — `/settings/notifications` — Email and webhook configuration
+- [ ] **Alert Rules** — `/settings/alerts` — Configure alert thresholds
+
+---
+
+## H. Settings
+
+- [ ] **General Settings** — `/settings` — Application preferences
+- [ ] **Profile** — `/settings/profile` — User profile
+- [ ] **Security** — `/settings/security` — Password and security
+- [ ] **Monitoring Settings** — `/settings/monitoring` — Default check intervals
+- [ ] **Maintenance Windows** — `/settings/maintenance` — Suppress alerts during maintenance
+- [ ] **Billing** — `/settings/billing` — Subscription management
+
+---
+## A. Authentication Pages
+
+- [ ] **Login** — `/login` — User login
+- [ ] **Register** — `/register` — Create account
+- [ ] **Forgot Password** — `/forgot-password` — Reset password
+- [ ] **Reset Password** — `/reset-password` — Set new password
+- [ ] **Verify Email** — `/verify-email` — Email verification
+
+---
+
+**Total Pages: 36**

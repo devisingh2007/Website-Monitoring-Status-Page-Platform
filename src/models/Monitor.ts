@@ -50,14 +50,14 @@ const MonitorSchema = new Schema<MonitorLook>(
       },
       required: true,
     },
-    interval: {
-      type: Number,
-      enum: {
-        values: [5, 10, 15, 30],
-        message: "Interval must be 5,10,15 or 30 minutes",
-      },
-      default: 5,
-    },
+  interval: {
+  type: Number,
+  enum: {
+    values: [300, 600, 900,1200,1500,1800],
+    message: "Interval must be 5, 10, 15 or 30 minutes",
+  },
+  default: 300,
+},
     timeout: {
       type: Number,
       min: [1000, "Timeout must be at least 1000 ms"],

@@ -34,7 +34,7 @@ export async function GET() {
     );
   }
 }
-//! interval 5,10,15,30 minute hi ho sakta hai schema me set kiya hai 
+//! interval 5,10,15,20,25,30 minute hi ho sakta hai schema me set kiya hai 
 export async function POST(request: Request) {
   try {
     await connectDB();
