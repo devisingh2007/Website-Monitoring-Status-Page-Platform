@@ -16,7 +16,7 @@ export default function DashboardLayout({
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="min-h-dvh bg-slate-50">
 
       {/* Desktop Sidebar */}
       <div className="hidden lg:block">
@@ -26,6 +26,8 @@ export default function DashboardLayout({
       {/* Mobile Sidebar */}
       {mobileSidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
+
+          {/* Overlay */}
           <button
             type="button"
             aria-label="Close navigation overlay"
@@ -33,12 +35,13 @@ export default function DashboardLayout({
             className="absolute inset-0 bg-slate-950/40"
           />
 
+          {/* Sidebar */}
           <div className="relative h-full w-64 max-w-[85vw] shadow-xl">
             <button
               type="button"
               aria-label="Close sidebar"
               onClick={() => setMobileSidebarOpen(false)}
-              className="absolute right-3 top-4 z-10 rounded-lg bg-white p-2 text-slate-500"
+              className="absolute right-3 top-4 z-50 rounded-lg bg-white p-2 text-slate-500"
             >
               <X size={19} />
             </button>
@@ -48,15 +51,19 @@ export default function DashboardLayout({
         </div>
       )}
 
-      {/* Main Area */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      {/* Main Content */}
+      <div className="min-h-dvh min-w-0 lg:ml-[280px]">
+
+        {/* Navbar */}
         <Navbar
           onMenuClick={() => setMobileSidebarOpen(true)}
         />
 
-        <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
+        {/* Page Content */}
+        <main className="min-w-0 p-5 sm:p-6 lg:p-8">
           {children}
         </main>
+
       </div>
     </div>
   );

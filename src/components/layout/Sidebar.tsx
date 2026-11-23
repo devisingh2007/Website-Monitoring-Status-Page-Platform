@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -17,46 +18,22 @@ const navigation = [
   {
     title: "OVERVIEW",
     items: [
-      {
-        name: "Dashboard",
-        href: "/dashboard",
-        icon: LayoutDashboard,
-      },
+      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
     ],
   },
   {
     title: "MONITORING",
     items: [
-      {
-        name: "Projects",
-        href: "/projects",
-        icon: FolderKanban,
-      },
-      {
-        name: "Monitors",
-        href: "/monitors",
-        icon: Monitor,
-      },
-      {
-        name: "Incidents",
-        href: "/incidents",
-        icon: AlertTriangle,
-      },
-      {
-        name: "Check History",
-        href: "/history",
-        icon: History,
-      },
+      { name: "Projects", href: "/projects", icon: FolderKanban },
+      { name: "Monitors", href: "/monitors", icon: Monitor },
+      { name: "Incidents", href: "/incidents", icon: AlertTriangle },
+      { name: "Check History", href: "/history", icon: History },
     ],
   },
   {
     title: "PREFERENCES",
     items: [
-      {
-        name: "Settings",
-        href: "/settings",
-        icon: Settings,
-      },
+      { name: "Settings", href: "/settings", icon: Settings },
     ],
   },
 ];
@@ -65,11 +42,9 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="flex h-screen w-70 shrink-0 flex-col border-r border-slate-200 bg-white">
-
-
+    <aside className="fixed inset-y-0 left-0 z-40 flex h-dvh w-70 shrink-0 flex-col overflow-hidden border-r border-slate-200 bg-white">
+      {/* Logo */}
       <div className="flex h-17.5 shrink-0 items-center justify-between border-b border-slate-200 px-5">
-
         <Link
           href="/dashboard"
           className="flex min-w-0 items-center gap-3"
@@ -99,18 +74,15 @@ export default function Sidebar() {
         </button>
       </div>
 
-      
-      <nav className="flex-1 space-y-7 overflow-y-auto px-4.25 py-6">
-
+      {/* Navigation */}
+      <nav className="min-h-0 flex-1 space-y-7 overflow-y-auto px-4.25 py-6">
         {navigation.map((group) => (
           <div key={group.title}>
-
             <p className="mb-3 px-3 text-[11px] font-semibold tracking-wider text-slate-400">
               {group.title}
             </p>
 
             <div className="space-y-1">
-
               {group.items.map((item) => {
                 const Icon = item.icon;
 
@@ -129,11 +101,7 @@ export default function Sidebar() {
                         : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                     }`}
                   >
-                    <Icon
-                      size={19}
-                      strokeWidth={1.8}
-                      className="shrink-0"
-                    />
+                    <Icon size={19} strokeWidth={1.8} className="shrink-0" />
 
                     <span>{item.name}</span>
 
@@ -145,18 +113,14 @@ export default function Sidebar() {
                   </Link>
                 );
               })}
-
             </div>
           </div>
         ))}
-
       </nav>
 
-      
+      {/* Bottom Brand Card */}
       <div className="shrink-0 border-t border-slate-200 p-4.25">
-
         <div className="rounded-xl bg-slate-50 p-3">
-
           <p className="text-xs font-semibold text-slate-800">
             ArgusSiteSentinel
           </p>
@@ -164,11 +128,8 @@ export default function Sidebar() {
           <p className="mt-1 text-xs text-slate-500">
             Website Monitoring Platform
           </p>
-
-         
         </div>
       </div>
-
     </aside>
   );
 }

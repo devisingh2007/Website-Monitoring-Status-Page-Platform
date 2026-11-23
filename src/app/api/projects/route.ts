@@ -5,7 +5,7 @@ import { Project } from "@/models";
 export async function GET() {
   try {
     await connectDB();
-    const projects = await Project.find().sort({ createAt: -1 }).lean();
+    const projects = await Project.find().sort({ createdAt: -1 }).lean();
 
     return NextResponse.json(
       {

@@ -1,8 +1,7 @@
-import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
-import { Monitor } from "@/models";
 import mongoose from "mongoose";
-import { Project } from "@/models";
+import { NextRequest, NextResponse } from "next/server";
+import { Project, Monitor } from "@/models";
 
 
 export async function GET() {
@@ -35,27 +34,28 @@ export async function GET() {
   }
 }
 //! interval 5,10,15,20,25,30 minute hi ho sakta hai schema me set kiya hai 
-export async function POST(request: Request) {
+
+export async function POST(request: NextRequest) {
   try {
-    await connectDB();
-const body=await request.json();
+    const body = await request.json();
+
     const {
       projectId,
       name,
       url,
       type,
-      interval,
-      timeout,
-      expectedStatusCodes,
-    } = body
+      interval = 300,
+      timeout = 10000,
+      expectedStatusCodes = [200],
+    } = body;
 
     if (!projectId || !name || !url || !type) {
       return NextResponse.json(
         {
           success: false,
-          message: "ProjectId name,url and type are required",
+          message: "Project ID, name, URL and type are required.",
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -63,76 +63,178 @@ const body=await request.json();
       return NextResponse.json(
         {
           success: false,
-          message: "project Id is required",
+          message: "Invalid project ID.",
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
-    if (type !== "website" && type !== "api") {
+    const monitorName = String(name).trim();
+
+    if (monitorName.length < 2 || monitorName.length > 100) {
       return NextResponse.json(
-        { success: false, message: "Type must be website or api" },
-        { status: 400 },
+        {
+          success: false,
+          message: "Monitor name must be between 2 and 100 characters.",
+        },
+        { status: 400 }
       );
     }
+
     let parsedUrl: URL;
 
     try {
-      parsedUrl = new URL(url);
+      parsedUrl = new URL(String(url).trim());
     } catch {
       return NextResponse.json(
-        { success: false, message: "Invalid URL" },
-        { status: 400 },
+        {
+          success: false,
+          message: "Please provide a valid URL.",
+        },
+        { status: 400 }
       );
     }
 
-    if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+    if (
+      !["http:", "https:"].includes(parsedUrl.protocol) ||
+      !parsedUrl.hostname ||
+      parsedUrl.username ||
+      parsedUrl.password ||
+      String(url).trim().length > 2048
+    ) {
       return NextResponse.json(
         {
           success: false,
-          message: "Only HTTP and HTTPS URLs are allowed",
+          message: "Only valid HTTP and HTTPS URLs are supported.",
         },
-        { status: 400 },
+        { status: 400 }
       );
     }
+
+    if (!["website", "api"].includes(type)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Monitor type must be website or api.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const allowedIntervals = [300, 600, 900, 1200, 1500, 1800];
+
+    if (!Number.isInteger(interval) ||!allowedIntervals.includes(interval)) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Invalid interval. Choose between 5 and 30 minutes.",
+        },
+        { status: 400 }
+      );
+    }
+
+    
+    if (!Number.isInteger(timeout) ||timeout < 1000 ||timeout > 30000) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Timeout must be between 1000 and 30000 milliseconds.",
+        },
+        { status: 400 }
+      );
+    }
+
+    
+    if (
+      !Array.isArray(expectedStatusCodes) ||
+      expectedStatusCodes.length === 0 ||
+      expectedStatusCodes.length > 20 ||
+      expectedStatusCodes.some(
+        (code: unknown) =>
+          typeof code !== "number" ||
+          !Number.isInteger(code) ||
+          code < 200 ||
+          code > 599
+      )
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Expected status codes must be integers between 200 and 599.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const uniqueStatusCodes = [...new Set(expectedStatusCodes)];
+
+    
     const project = await Project.findById(projectId);
 
-    if (!project || !project.isActive) {
+    if (!project) {
       return NextResponse.json(
         {
           success: false,
-          message: "Project not found or inactive",
+          message: "Project not found.",
         },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
+    if (!project.isActive) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Cannot add a monitor to an inactive project.",
+        },
+        { status: 400 }
+      );
+    }
+
+    
     const monitor = await Monitor.create({
       projectId,
-      name,
+      name: monitorName,
       url: parsedUrl.toString(),
       type,
-      ...(interval !== undefined && { interval }),
-      ...(timeout !== undefined && { timeout }),
-      ...(expectedStatusCodes !== undefined && { expectedStatusCodes }),
+      interval,
+      timeout,
+      expectedStatusCodes: uniqueStatusCodes,
+      status: "operational",
+      enabled: true,
+      failureCount: 0,
+      nextCheckAt: new Date(),
+      lastCheckedAt: null,
+      lastResponseTime: null,
     });
+
     return NextResponse.json(
       {
         success: true,
-        message: "Monitor created successfully",
+        message: "Monitor created successfully.",
         data: monitor,
       },
-      { status: 201 },
+      { status: 201 }
     );
   } catch (error) {
-    console.error("POST Monitor Error:", error);
+    console.error("CREATE MONITOR ERROR:", error);
+
+    if (error instanceof mongoose.Error.ValidationError) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: error.message,
+        },
+        { status: 400 }
+      );
+    }
 
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to create monitor",
+        message: "Failed to create monitor.",
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

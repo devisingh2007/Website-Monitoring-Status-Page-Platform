@@ -2,7 +2,7 @@ import mongoose, { Model, Schema } from "mongoose";
 
 export interface projectlook {
   name: string;
-  description: string;
+  description?: string;
   slug: string;
   isActive: boolean;
   createdAt: Date;
