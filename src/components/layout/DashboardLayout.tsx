@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Sidebar from "./Sidebar";
 import Navbar from "./Navbar";
 import { X } from "lucide-react";
@@ -20,7 +19,12 @@ export default function DashboardLayout({
 
       {/* Desktop Sidebar */}
       <div className="hidden lg:block">
-        <Sidebar />
+        <Suspense fallback={
+            <div className="h-dvh w-[280px] bg-white" />
+          }
+        >
+          <Sidebar />
+        </Suspense>
       </div>
 
       {/* Mobile Sidebar */}
@@ -37,6 +41,7 @@ export default function DashboardLayout({
 
           {/* Sidebar */}
           <div className="relative h-full w-64 max-w-[85vw] shadow-xl">
+
             <button
               type="button"
               aria-label="Close sidebar"
@@ -46,7 +51,14 @@ export default function DashboardLayout({
               <X size={19} />
             </button>
 
-            <Sidebar />
+            <Suspense
+              fallback={
+                <div className="h-full w-full bg-white" />
+              }
+            >
+              <Sidebar />
+            </Suspense>
+
           </div>
         </div>
       )}
@@ -55,9 +67,11 @@ export default function DashboardLayout({
       <div className="min-h-dvh min-w-0 lg:ml-[280px]">
 
         {/* Navbar */}
-        <Navbar
-          onMenuClick={() => setMobileSidebarOpen(true)}
-        />
+        <Suspense
+          fallback={<div className="h-16 bg-white" />}
+        >
+          <Navbar onMenuClick={() => setMobileSidebarOpen(true)}/>
+        </Suspense>
 
         {/* Page Content */}
         <main className="min-w-0 p-5 sm:p-6 lg:p-8">

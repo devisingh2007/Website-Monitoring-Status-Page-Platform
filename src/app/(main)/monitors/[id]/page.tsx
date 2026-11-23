@@ -1,9 +1,8 @@
-
 "use client";
-
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { Suspense } from "react";
 
 import {
   ArrowLeft,
@@ -57,7 +56,7 @@ interface MonitorApiResponse {
   data: MonitorDetails;
 }
 
-export default function MonitorDetailsPage() {
+ function MonitorDetailsContent() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
 
@@ -66,7 +65,7 @@ export default function MonitorDetailsPage() {
   const [monitor, setMonitor] = useState<MonitorDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
+const requestedMonitorId = useRef<string | null>(null);
   const fetchMonitorDetails = useCallback(async () => {
     try {
       setLoading(true);
@@ -96,10 +95,18 @@ export default function MonitorDetailsPage() {
     }
   }, [monitorId]);
 
-  useEffect(() => {
-    void fetchMonitorDetails();
-  }, [fetchMonitorDetails]);
+useEffect(() => {
+  if (!monitorId) return;
 
+  // Prevent duplicate initial request in React Strict Mode
+  if (requestedMonitorId.current === monitorId) {
+    return;
+  }
+
+  requestedMonitorId.current = monitorId;
+
+  void fetchMonitorDetails();
+}, [monitorId, fetchMonitorDetails]);
   function getProjectName(projectId: MonitorProject | string) {
     return typeof projectId === "object"
       ? projectId?.name ?? "Unknown Project"
@@ -459,5 +466,18 @@ export default function MonitorDetailsPage() {
       </section>
 
     </div>
+  );
+}
+export default function MonitorDetailsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <p className="text-slate-500">Loading monitor details...</p>
+        </div>
+      }
+    >
+      <MonitorDetailsContent />
+    </Suspense>
   );
 }
