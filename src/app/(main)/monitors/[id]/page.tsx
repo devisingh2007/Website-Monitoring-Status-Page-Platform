@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import CheckHistory from "@/components/monitors/CheckHistory";
 import { Suspense } from "react";
 
 import {
@@ -432,8 +433,11 @@ useEffect(() => {
             </div>
           ))}
         </div>
+        
       </section>
-
+{monitor && (
+  < CheckHistory monitorId={monitor._id} />
+)}
       {/* Expected Status Codes */}
       <section className="rounded-xl border border-slate-200 bg-white p-6">
         <div className="flex items-center gap-2">
@@ -490,7 +494,9 @@ useEffect(() => {
           )}
         </div>
       </section>
-
+{monitor && (
+  <CheckHistory monitorId={monitor._id} />
+)}
       {/* Timestamps */}
       <section className="rounded-xl border border-slate-200 bg-white p-6">
         <h2 className="font-semibold text-slate-900">
