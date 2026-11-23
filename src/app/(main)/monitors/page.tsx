@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo,useRef, useState } from "react";
 import Link from "next/link";
 
 import {
@@ -62,7 +62,7 @@ export default function MonitorsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
-
+const hasFetched = useRef(false);
   const fetchMonitors = useCallback(async () => {
     try {
       setLoading(true);
@@ -90,9 +90,13 @@ export default function MonitorsPage() {
     }
   }, []);
 
-  useEffect(() => {
-    void fetchMonitors();
-  }, [fetchMonitors]);
+useEffect(() => {
+  if (hasFetched.current) return;
+
+  hasFetched.current = true;
+
+  void fetchMonitors();
+}, [fetchMonitors]);
 
   const filteredMonitors = useMemo(() => {
     return monitors.filter((monitor) => {

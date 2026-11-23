@@ -19,6 +19,7 @@ import {
   FolderKanban,
   Timer,
   CheckCircle2,
+  Trash2,X
 } from "lucide-react";
 
 type MonitorStatus = "operational" | "down" | "paused";
@@ -65,6 +66,9 @@ interface MonitorApiResponse {
   const [monitor, setMonitor] = useState<MonitorDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+const [deleting, setDeleting] = useState(false);
+const [deleteError, setDeleteError] = useState("");
 const requestedMonitorId = useRef<string | null>(null);
   const fetchMonitorDetails = useCallback(async () => {
     try {
@@ -94,6 +98,41 @@ const requestedMonitorId = useRef<string | null>(null);
       setLoading(false);
     }
   }, [monitorId]);
+
+
+const handleDeleteMonitor = async () => {
+  try {
+    setDeleting(true);
+    setDeleteError("");
+
+    const response = await fetch(`/api/monitors/${monitorId}`, {
+      method: "DELETE",
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(
+        result.message || "Failed to delete monitor"
+      );
+    }
+
+    setDeleteDialogOpen(false);
+
+    router.replace("/monitors");
+    router.refresh();
+
+  } catch (error) {
+    setDeleteError(
+      error instanceof Error
+        ? error.message
+        : "Failed to delete monitor"
+    );
+  } finally {
+    setDeleting(false);
+  }
+};
+
 
 useEffect(() => {
   if (!monitorId) return;
@@ -266,6 +305,16 @@ useEffect(() => {
               <Pencil size={16} />
               Edit Monitor
             </Link>
+            <button
+  onClick={() => {
+    setDeleteError("");
+    setDeleteDialogOpen(true);
+  }}
+  className="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-white px-4 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50"
+>
+  <Trash2 size={16} />
+  Delete Monitor
+</button>
           </div>
         </div>
       </div>
@@ -464,7 +513,90 @@ useEffect(() => {
           </div>
         </div>
       </section>
+{deleteDialogOpen && (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/50 p-4">
+    <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
 
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="rounded-xl bg-red-50 p-3 text-red-600">
+            <Trash2 size={22} />
+          </div>
+
+          <h2 className="text-lg font-bold text-slate-900">
+            Delete Monitor?
+          </h2>
+        </div>
+
+        <button
+          type="button"
+          disabled={deleting}
+          onClick={() => setDeleteDialogOpen(false)}
+          className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 disabled:opacity-50"
+          aria-label="Close dialog"
+        >
+          <X size={19} />
+        </button>
+      </div>
+
+      <div className="mt-5 rounded-lg border border-red-100 bg-red-50 p-4">
+        <p className="text-sm text-red-800">
+          You are about to permanently delete:
+        </p>
+
+        <p className="mt-2 font-semibold text-red-900">
+          {monitor.name}
+        </p>
+
+        <p className="mt-1 break-all text-xs text-red-700">
+          {monitor.url}
+        </p>
+      </div>
+
+      <p className="mt-4 text-sm leading-6 text-slate-600">
+        All associated check results, incidents and incident
+        histories will also be permanently deleted.
+      </p>
+
+      {deleteError && (
+        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+          {deleteError}
+        </div>
+      )}
+
+      <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <button
+          type="button"
+          disabled={deleting}
+          onClick={() => setDeleteDialogOpen(false)}
+          className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+        >
+          Cancel
+        </button>
+
+        <button
+          type="button"
+          onClick={handleDeleteMonitor}
+          disabled={deleting}
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-red-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+        >
+          {deleting ? (
+            <>
+              <Loader2 size={16} className="animate-spin" />
+              Deleting...
+            </>
+          ) : (
+            <>
+              <Trash2 size={16} />
+              Delete Permanently
+            </>
+          )}
+        </button>
+      </div>
+
+    </div>
+  </div>
+)}
     </div>
   );
 }
