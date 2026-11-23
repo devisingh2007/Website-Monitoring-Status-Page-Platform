@@ -1,51 +1,86 @@
 import { NextResponse } from "next/server";
 import mongoose from "mongoose";
+import {Monitor,CheckResult,Incident,IncidentHistory} from "@/models";
 import connectDB from "@/lib/db";
-import {Monitor} from "@/models";
 
-type RouteContext = {params: Promise<{ id: string }>;
+type RouteContext = {
+  params: Promise<{ id: string }>;
 };
 
-export async function GET(_request: Request, { params }: RouteContext) {
+
+export async function GET(_request: Request,{ params }: RouteContext) {
   try {
     await connectDB();
-    const { id } = await params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Invalid monitor ID"
-        },
-        { status: 400 }
-      );
-    }
-
-    const monitor = await Monitor.findById(id)
-      .populate("projectId", "name slug isActive").lean();
-
-    if (!monitor) {
-      return NextResponse.json({success: false,message: "Monitor not found"},{ status: 404 }
-      );
-    }
-
-    return NextResponse.json({success: true,data: monitor},{ status: 200 });
-  } catch (error) {
-    console.error("GET Monitor By ID Error:", error);
-
-    return NextResponse.json({success: false,message: "Failed to fetch monitor"},{ status: 500 });
-  }
-}
-
-
-
-export async function PATCH(request: Request,{ params }: RouteContext) {
-  try {
     const { id } = await params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { success: false, message: "Invalid monitor ID" },
+        { status: 400 }
+      );
+    }
+
+    const monitor = await Monitor.findById(id)
+      .populate("projectId", "name slug isActive")
+      .lean();
+
+    if (!monitor) {
+      return NextResponse.json(
+        { success: false, message: "Monitor not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: monitor,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("GET MONITOR ERROR:", error);
+
+    return NextResponse.json(
+      { success: false, message: "Failed to fetch monitor" },
+      { status: 500 }
+    );
+  }
+}
+
+
+export async function PATCH(request: Request,{ params }: RouteContext) {
+  try {
+    await connectDB();
+
+    const { id } = await params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json(
+        { success: false, message: "Invalid monitor ID" },
+        { status: 400 }
+      );
+    }
+
+    let body: unknown;
+
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { success: false, message: "Invalid JSON body" },
+        { status: 400 }
+      );
+    }
+
+    if (
+      !body ||
+      typeof body !== "object" ||
+      Array.isArray(body)
+    ) {
+      return NextResponse.json(
+        { success: false, message: "Invalid request body" },
         { status: 400 }
       );
     }
@@ -59,19 +94,6 @@ export async function PATCH(request: Request,{ params }: RouteContext) {
       );
     }
 
-    const body: unknown = await request.json();
-
-    if (
-      !body ||
-      typeof body !== "object" ||
-      Array.isArray(body)
-    ) {
-      return NextResponse.json(
-        { success: false, message: "Invalid request body" },
-        { status: 400 }
-      );
-    }
-
     const data = body as Record<string, unknown>;
 
     const allowedFields = ["name","url","type","interval","timeout","expectedStatusCodes","enabled"];
@@ -80,7 +102,9 @@ export async function PATCH(request: Request,{ params }: RouteContext) {
 
     if (
       providedFields.length === 0 ||
-      providedFields.some((field) => !allowedFields.includes(field))
+      providedFields.some(
+        (field) => !allowedFields.includes(field)
+      )
     ) {
       return NextResponse.json(
         {
@@ -91,6 +115,7 @@ export async function PATCH(request: Request,{ params }: RouteContext) {
       );
     }
 
+    
     if (data.name !== undefined) {
       if (typeof data.name !== "string") {
         return NextResponse.json(
@@ -114,9 +139,11 @@ export async function PATCH(request: Request,{ params }: RouteContext) {
       monitor.name = name;
     }
 
+    
     if (data.url !== undefined) {
       if (
         typeof data.url !== "string" ||
+        data.url.trim().length === 0 ||
         data.url.trim().length > 2048
       ) {
         return NextResponse.json(
@@ -137,7 +164,8 @@ export async function PATCH(request: Request,{ params }: RouteContext) {
       }
 
       if (
-        !["http:", "https:"].includes(parsedUrl.protocol) ||
+        (parsedUrl.protocol !== "http:" &&
+          parsedUrl.protocol !== "https:") ||
         !parsedUrl.hostname ||
         parsedUrl.username ||
         parsedUrl.password
@@ -155,7 +183,10 @@ export async function PATCH(request: Request,{ params }: RouteContext) {
     }
 
     if (data.type !== undefined) {
-      if (data.type !== "website" && data.type !== "api") {
+      if (
+        data.type !== "website" &&
+        data.type !== "api"
+      ) {
         return NextResponse.json(
           {
             success: false,
@@ -231,7 +262,19 @@ export async function PATCH(request: Request,{ params }: RouteContext) {
         );
       }
 
-      monitor.expectedStatusCodes = [...new Set(codes)];
+      const validCodes = codes as number[];
+
+      if (new Set(validCodes).size !== validCodes.length) {
+        return NextResponse.json(
+          {
+            success: false,
+            message: "Duplicate expected status codes are not allowed.",
+          },
+          { status: 400 }
+        );
+      }
+
+      monitor.expectedStatusCodes = validCodes;
     }
 
     if (data.enabled !== undefined) {
@@ -252,7 +295,6 @@ export async function PATCH(request: Request,{ params }: RouteContext) {
       }
     }
 
-    
     await monitor.save();
 
     return NextResponse.json(
@@ -280,55 +322,116 @@ export async function PATCH(request: Request,{ params }: RouteContext) {
   }
 }
 
-
-
+// ==========================================
+// DELETE MONITOR
+// ==========================================
 
 export async function DELETE(_request: Request,{ params }: RouteContext) {
+  let session: mongoose.ClientSession | undefined;
+
   try {
     await connectDB();
 
     const { id } = await params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({
+      return NextResponse.json(
+        {
           success: false,
-          message: "Invalid monitor ID"
-        },{ status: 400 }
+          message: "Invalid monitor ID",
+        },
+        { status: 400 }
       );
     }
 
-    const monitor = await Monitor.findById(id);
+    session = await mongoose.startSession();
 
-    if (!monitor) {
-      return NextResponse.json({
-          success: false,
-          message: "Monitor not found"
-        },{ status: 404 }
+    const deletedCounts = {
+      checkResults: 0,
+      incidents: 0,
+      incidentHistories: 0,
+    };
+
+    await session.withTransaction(async () => {
+      const monitor = await Monitor.findById(id).session(session!);
+
+      if (!monitor) {
+        throw new Error("MONITOR_NOT_FOUND");
+      }
+
+      const incidents = await Incident.find({monitorId: id,}).select("_id").session(session!).lean();
+
+      const incidentIds = incidents.map(
+        (incident) => incident._id
       );
-    }
 
-    monitor.enabled = false;
-    monitor.status = "paused";
+      // 2. Delete incident histories
+      const historyResult = await IncidentHistory.deleteMany(
+        {
+          incidentId: { $in: incidentIds },
+        },
+        { session }
+      );
 
-    await monitor.save();
+      deletedCounts.incidentHistories =
+        historyResult.deletedCount;
 
-    return NextResponse.json({
+      // 3. Delete incidents
+      const incidentResult = await Incident.deleteMany(
+        { monitorId: id },
+        { session }
+      );
+
+      deletedCounts.incidents =
+        incidentResult.deletedCount;
+
+      // 4. Delete check results
+      const checkResult = await CheckResult.deleteMany(
+        { monitorId: id },
+        { session }
+      );
+
+      deletedCounts.checkResults =
+        checkResult.deletedCount;
+
+      // 5. Delete monitor
+      await Monitor.findByIdAndDelete(id).session(session!);
+    });
+
+    return NextResponse.json(
+      {
         success: true,
-        message: "Monitor disabled successfully",
-        data: monitor
+        message: "Monitor and related records deleted successfully.",
+        data: deletedCounts,
       },
       { status: 200 }
     );
-
   } catch (error) {
-    console.error("DELETE Monitor Error:", error);
+    if (
+      error instanceof Error &&
+      error.message === "MONITOR_NOT_FOUND"
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Monitor not found",
+        },
+        { status: 404 }
+      );
+    }
+
+    console.error("DELETE MONITOR ERROR:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to disable monitor"
+        message: "Failed to delete monitor.",
       },
       { status: 500 }
     );
+  } finally {
+    if (session) {
+      await session.endSession();
+    }
   }
 }
