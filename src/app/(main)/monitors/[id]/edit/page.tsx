@@ -1,7 +1,8 @@
 
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState,useRef } from "react";
+import { Suspense } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -43,7 +44,7 @@ const INTERVAL_OPTIONS = [
   { label: "30 minutes", value: 1800 },
 ];
 
-export default function EditMonitorPage() {
+ function EditMonitorContent() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
 
@@ -62,7 +63,7 @@ export default function EditMonitorPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-
+const requestedMonitorId = useRef<string | null>(null);
   // Fetch existing monitor
   const fetchMonitor = useCallback(async () => {
     try {
@@ -100,9 +101,14 @@ export default function EditMonitorPage() {
     }
   }, [monitorId]);
 
-  useEffect(() => {
-    void fetchMonitor();
-  }, [fetchMonitor]);
+useEffect(() => {
+  if (!monitorId) return;
+
+  if (requestedMonitorId.current === monitorId) return;
+
+  requestedMonitorId.current = monitorId;
+  void fetchMonitor();
+}, [monitorId, fetchMonitor]);
 
   // Update monitor
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -112,23 +118,27 @@ export default function EditMonitorPage() {
       setSaving(true);
       setError("");
 
-      const statusCodes = expectedStatusCodes
-        .split(",")
-        .map((code) => Number(code.trim()));
+     const statusCodes = expectedStatusCodes
+  .split(",")
+  .map((code) => code.trim())
+  .filter(Boolean)
+  .map(Number);
 
-      if (
-        statusCodes.length === 0 ||
-        statusCodes.some(
-          (code) =>
-            !Number.isInteger(code) ||
-            code < 200 ||
-            code > 599
-        )
-      ) {
-        throw new Error(
-          "Enter valid HTTP status codes between 200 and 599."
-        );
-      }
+if (
+  statusCodes.length === 0 ||
+  statusCodes.some(
+    (code) =>
+      !Number.isInteger(code) ||
+      code < 200 ||
+      code > 599
+  )
+) {
+  throw new Error(
+    "Enter valid HTTP status codes between 200 and 599."
+  );
+}
+
+const uniqueStatusCodes = [...new Set(statusCodes)];
 
       const response = await fetch(`/api/monitors/${monitorId}`, {
         method: "PATCH",
@@ -141,7 +151,7 @@ export default function EditMonitorPage() {
           type,
           interval,
           timeout,
-          expectedStatusCodes: [...new Set(statusCodes)],
+         expectedStatusCodes: uniqueStatusCodes,
           enabled,
         }),
       });
@@ -440,5 +450,20 @@ export default function EditMonitorPage() {
         </div>
       </form>
     </div>
+  );
+}
+
+
+export default function EditMonitorPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-64 items-center justify-center">
+          <Loader2 className="animate-spin text-blue-600" size={24} />
+        </div>
+      }
+    >
+      <EditMonitorContent />
+    </Suspense>
   );
 }
