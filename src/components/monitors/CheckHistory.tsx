@@ -62,15 +62,15 @@ export default function CheckHistory({
         setLoading(true);
         setError("");
 
-       const response = await fetch(
-  `/api/check-results?monitorId=${monitorId}&page=${page}&limit=10`,
-  {
-    cache: "no-store",
-    signal,
-  }
-);
+        const response = await fetch(
+          `/api/check-results?monitorId=${monitorId}&page=${page}&limit=10`,
+          {
+            cache: "no-store",
+            signal,
+          }
+        );
 
-const result: CheckHistoryResponse = await response.json();
+        const result: CheckHistoryResponse = await response.json();
 
         if (!response.ok || !result.success) {
           throw new Error(

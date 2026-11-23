@@ -4,7 +4,8 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import CheckHistory from "@/components/monitors/CheckHistory";
 import { Suspense } from "react";
-
+import ResponseTimeChart from "@/components/monitors/ResponseTimeChart";
+import UptimeAnalytics from "@/components/monitors/UptimeAnalytics";
 import {
   ArrowLeft,
   Globe,
@@ -406,6 +407,10 @@ useEffect(() => {
           </p>
         </div>
       </section>
+      {/* Response Time Analytics */}
+<ResponseTimeChart monitorId={monitor._id} />
+{/* Uptime Analytics */}
+<UptimeAnalytics monitorId={monitor._id} />
 
       {/* Monitor Configuration */}
       <section className="rounded-xl border border-slate-200 bg-white p-6">
@@ -435,9 +440,6 @@ useEffect(() => {
         </div>
         
       </section>
-{monitor && (
-  < CheckHistory monitorId={monitor._id} />
-)}
       {/* Expected Status Codes */}
       <section className="rounded-xl border border-slate-200 bg-white p-6">
         <div className="flex items-center gap-2">

@@ -127,7 +127,7 @@ export async function POST(request: Request) {
 
     if (typeof title !== "string" ||typeof description !== "string" ||title.trim().length < 3 ||title.trim().length > 150 ||
       description.trim().length < 3 ||
-      description.trim().length > 2000
+      description.trim().length > 1000
     ) {
       return NextResponse.json(
         { success: false, message: "Invalid title or description" },
