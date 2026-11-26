@@ -53,12 +53,18 @@ export async function GET(_request: Request,{ params }: RouteContext) {
   }
 }
 
-export async function PATCH(request: Request,{ params }: RouteContext) {
+export async function PATCH(
+  request: Request,
+  { params }: RouteContext
+) {
+  let session: mongoose.ClientSession | null = null;
+
   try {
     await connectDB();
 
     const { id } = await params;
 
+    // Validate incident ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json(
         { success: false, message: "Invalid incident ID" },
@@ -68,37 +74,66 @@ export async function PATCH(request: Request,{ params }: RouteContext) {
 
     const body = await request.json();
 
-
-    const incident = await Incident.findById(id);
-
-    if (!incident) {
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
       return NextResponse.json(
-        { success: false, message: "Incident not found" },
-        { status: 404 }
+        { success: false, message: "Invalid request body" },
+        { status: 400 }
       );
     }
 
-    const allowedFields = ["title","description","severity","status"] as const;
+    const allowedFields = [
+      "title",
+      "description",
+      "severity",
+      "status",
+    ];
 
-    const updates: Record<string, unknown> = {};
+    const hasAllowedField = allowedFields.some((field) =>
+      Object.prototype.hasOwnProperty.call(body, field)
+    );
 
-    for (const field of allowedFields) {
-      if (Object.prototype.hasOwnProperty.call(body, field)) {
-        updates[field] = body[field];
-      }
-    }
-
-    if (Object.keys(updates).length === 0) {
+    if (!hasAllowedField) {
       return NextResponse.json(
         { success: false, message: "No valid fields provided" },
         { status: 400 }
       );
     }
 
+    // Validate title
+    if (Object.prototype.hasOwnProperty.call(body, "title")) {
+      if (
+        typeof body.title !== "string" ||
+        body.title.trim().length < 3 ||
+        body.title.trim().length > 150
+      ) {
+        return NextResponse.json(
+          { success: false, message: "Invalid incident title" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate description
+    if (Object.prototype.hasOwnProperty.call(body, "description")) {
+      if (
+        typeof body.description !== "string" ||
+        body.description.trim().length < 3 ||
+        body.description.trim().length > 1000
+      ) {
+        return NextResponse.json(
+          { success: false, message: "Invalid description" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Validate severity
     const severities = ["minor", "major", "critical"];
 
-    if (updates.severity !== undefined &&(typeof updates.severity !== "string" ||
-        !severities.includes(updates.severity))
+    if (
+      Object.prototype.hasOwnProperty.call(body, "severity") &&
+      (typeof body.severity !== "string" ||
+        !severities.includes(body.severity))
     ) {
       return NextResponse.json(
         { success: false, message: "Invalid severity" },
@@ -106,79 +141,155 @@ export async function PATCH(request: Request,{ params }: RouteContext) {
       );
     }
 
+    // Validate status
+    const statuses = [
+      "investigating",
+      "identified",
+      "monitoring",
+      "resolved",
+    ];
 
-    const statuses = ["investigating","identified","monitoring","resolved"];
-
-    if (updates.status !== undefined &&(typeof updates.status !== "string" ||!statuses.includes(updates.status))) {
+    if (
+      Object.prototype.hasOwnProperty.call(body, "status") &&
+      (typeof body.status !== "string" ||
+        !statuses.includes(body.status))
+    ) {
       return NextResponse.json(
         { success: false, message: "Invalid incident status" },
         { status: 400 }
       );
     }
 
-    
-    if (updates.title !== undefined) {
-      if (
-        typeof updates.title !== "string" ||
-        updates.title.trim().length < 3 ||
-        updates.title.trim().length > 150
-      ) {
-        return NextResponse.json(
-          { success: false, message: "Invalid incident title" },
-          { status: 400 }
-        );
+    session = await mongoose.startSession();
+
+    await session.withTransaction(async () => {
+      const incident = await Incident.findById(id).session(session!);
+
+      if (!incident) {
+        throw new Error("INCIDENT_NOT_FOUND");
       }
 
-      updates.title = updates.title.trim();
-    }
+      const historyEntries: {
+        incidentId: mongoose.Types.ObjectId;
+        message: string;
+        status: string | null;
+      }[] = [];
 
-    if (updates.description !== undefined) {
-      if (
-        typeof updates.description !== "string" ||
-        updates.description.trim().length < 3 ||
-        updates.description.trim().length > 2000
-      ) {
-        return NextResponse.json(
-          { success: false, message: "Invalid description" },
-          { status: 400 }
-        );
+      let statusChanged = false;
+
+      // Title change
+      if (body.title !== undefined) {
+        const newTitle = body.title.trim();
+
+        if (incident.title !== newTitle) {
+          incident.title = newTitle;
+
+          historyEntries.push({
+            incidentId: incident._id,
+            message: `Title updated: ${newTitle}`,
+            status: null,
+          });
+        }
       }
 
-      updates.description = updates.description.trim();
-    }
+      // Description change
+      if (body.description !== undefined) {
+        const newDescription = body.description.trim();
 
-    
-    incident.set(updates);
+        if (incident.description !== newDescription) {
+          incident.description = newDescription;
 
-    if (updates.status === "resolved") {
-      incident.resolvedAt = new Date();
-    } else if (updates.status !== undefined) {
-      incident.resolvedAt = null;
-    }
+          historyEntries.push({
+            incidentId: incident._id,
+            message: "Incident description updated",
+            status: null,
+          });
+        }
+      }
 
-    await incident.save();
+      // Severity change
+      if (body.severity !== undefined) {
+        const newSeverity = body.severity;
+
+        if (incident.severity !== newSeverity) {
+          const previousSeverity = incident.severity;
+
+          incident.severity = newSeverity;
+
+          historyEntries.push({
+            incidentId: incident._id,
+            message: `Severity changed: ${previousSeverity} → ${newSeverity}`,
+            status: null,
+          });
+        }
+      }
+
+      // Status change
+      if (body.status !== undefined) {
+        const newStatus = body.status;
+
+        if (incident.status !== newStatus) {
+          const previousStatus = incident.status;
+
+          incident.status = newStatus;
+          statusChanged = true;
+
+          historyEntries.push({
+            incidentId: incident._id,
+            message: `Status changed: ${previousStatus} → ${newStatus}`,
+            status: newStatus,
+          });
+        }
+      }
+
+      // Update resolvedAt only when status actually changes
+      if (statusChanged) {
+        incident.resolvedAt =
+          incident.status === "resolved" ? new Date() : null;
+      }
+
+      // Save only if something actually changed
+      if (historyEntries.length > 0) {
+        await incident.save({ session });
+
+        await IncidentHistory.create(historyEntries, { session });
+      }
+    });
+
+    const updatedIncident = await Incident.findById(id);
 
     return NextResponse.json(
       {
         success: true,
         message: "Incident updated successfully",
-        data: incident
+        data: updatedIncident,
       },
       { status: 200 }
     );
-
   } catch (error) {
+    if (error instanceof Error && error.message === "INCIDENT_NOT_FOUND") {
+      return NextResponse.json(
+        { success: false, message: "Incident not found" },
+        { status: 404 }
+      );
+    }
+
     console.error("PATCH Incident Error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to update incident"
+        message: "Failed to update incident",
       },
       { status: 500 }
     );
+  } finally {
+    if (session) {
+      await session.endSession();
+    }
   }
 }
+
 
 
 export async function DELETE(_request: Request,{ params }: RouteContext) {
