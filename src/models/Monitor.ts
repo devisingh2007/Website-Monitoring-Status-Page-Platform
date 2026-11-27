@@ -17,8 +17,6 @@ export interface MonitorLook {
   nextCheckAt: Date;
   lastCheckedAt: Date | null;
   lastResponseTime: number | null;
-  checkLockToken: string | null;
-  checkLockExpiresAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -110,16 +108,7 @@ const MonitorSchema = new Schema<MonitorLook>(
       min: 0,
       default: null,
     },
-    checkLockToken: {
-      type: String,
-      default: null,
-    },
-
-    checkLockExpiresAt: {
-      type: Date,
-      default: null,
-      index: true,
-    },
+ 
   },
   {
     timestamps: true,
