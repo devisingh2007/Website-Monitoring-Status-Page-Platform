@@ -16,7 +16,9 @@ export interface MonitorLook {
   failureCount: number;
   nextCheckAt: Date;
   lastCheckedAt: Date | null;
-lastResponseTime: number | null;
+  lastResponseTime: number | null;
+  checkLockToken: string | null;
+  checkLockExpiresAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -50,14 +52,14 @@ const MonitorSchema = new Schema<MonitorLook>(
       },
       required: true,
     },
-  interval: {
-  type: Number,
-  enum: {
-    values: [300, 600, 900,1200,1500,1800],
-    message: "Interval must be 5, 10, 15 or 30 minutes",
-  },
-  default: 300,
-},
+    interval: {
+      type: Number,
+      enum: {
+        values: [300, 600, 900, 1200, 1500, 1800],
+        message: "Interval must be 5, 10, 15 or 30 minutes",
+      },
+      default: 300,
+    },
     timeout: {
       type: Number,
       min: [1000, "Timeout must be at least 1000 ms"],
@@ -107,6 +109,16 @@ const MonitorSchema = new Schema<MonitorLook>(
       type: Number,
       min: 0,
       default: null,
+    },
+    checkLockToken: {
+      type: String,
+      default: null,
+    },
+
+    checkLockExpiresAt: {
+      type: Date,
+      default: null,
+      index: true,
     },
   },
   {

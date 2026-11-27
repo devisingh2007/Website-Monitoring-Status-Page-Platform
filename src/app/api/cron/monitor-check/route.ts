@@ -2,8 +2,19 @@ import { NextResponse } from "next/server";
 import connectDB from "@/lib/db";
 import { Monitor } from "@/models";
 import { runMonitorCheck } from "@/lib/monitoring/run-monitor-check";
+import {
+  acquireCronLock,
+  releaseCronLock,
+  renewCronLock,
+} from "@/lib/monitoring/cron-lock";
+
 
 export async function POST(request: Request) {
+  let ownerToken: string | null = null;
+  let heartbeat: ReturnType<typeof setInterval> | null = null;
+  let lockLost = false;
+let heartbeatInProgress = false;
+const executionStartedAt = Date.now();
   try {
     const cronSecret = process.env.CRON_SECRET;
 
@@ -26,6 +37,42 @@ export async function POST(request: Request) {
     }
 
     await connectDB();
+    // acquire distributed lock
+    ownerToken = await acquireCronLock();
+
+    if (!ownerToken) {
+      return NextResponse.json(
+        {
+          success: true,
+          message: "Monitoring is already running. Execution skipped.",
+          skipped: true,
+          durationMs: Date.now() - executionStartedAt,
+        },
+        { status: 200 },
+      );
+    }
+
+   heartbeat = setInterval(async () => {
+  if (heartbeatInProgress || lockLost || !ownerToken) {
+    return;
+  }
+
+  heartbeatInProgress = true;
+
+  try {
+    const renewed = await renewCronLock(ownerToken);
+
+    if (!renewed) {
+      lockLost = true;
+      console.error("Cron lock lost. Stopping monitoring execution.");
+    }
+  } catch (error) {
+    lockLost = true;
+    console.error("Cron lock renewal failed:", error);
+  } finally {
+    heartbeatInProgress = false;
+  }
+}, 30_000);
 
     const now = new Date();
 
@@ -40,6 +87,10 @@ export async function POST(request: Request) {
 
     const results = [];
     for (const monitor of monitors) {
+  if (lockLost) {
+    console.error("Cron execution stopped because lock was lost.");
+    break;
+  }
       try {
         const result = await runMonitorCheck(monitor._id.toString());
 
@@ -71,6 +122,7 @@ export async function POST(request: Request) {
       total: monitors.length,
       successful: results.filter((item) => item.success).length,
       failed: results.filter((item) => !item.success).length,
+      durationMs: Date.now() - executionStartedAt,
       results,
     });
   } catch (error) {
@@ -83,5 +135,17 @@ export async function POST(request: Request) {
       },
       { status: 500 },
     );
+  } finally {
+    if (heartbeat) {
+      clearInterval(heartbeat);
+    }
+
+    if (ownerToken) {
+      try {
+        await releaseCronLock(ownerToken);
+      } catch (error) {
+        console.error("Cron lock relese error", error);
+      }
+    }
   }
 }
