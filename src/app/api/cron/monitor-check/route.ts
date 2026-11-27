@@ -8,13 +8,12 @@ import {
   renewCronLock,
 } from "@/lib/monitoring/cron-lock";
 
-
 export async function POST(request: Request) {
   let ownerToken: string | null = null;
   let heartbeat: ReturnType<typeof setInterval> | null = null;
   let lockLost = false;
-let heartbeatInProgress = false;
-const executionStartedAt = Date.now();
+  let heartbeatInProgress = false;
+  const executionStartedAt = Date.now();
   try {
     const cronSecret = process.env.CRON_SECRET;
 
@@ -52,27 +51,27 @@ const executionStartedAt = Date.now();
       );
     }
 
-   heartbeat = setInterval(async () => {
-  if (heartbeatInProgress || lockLost || !ownerToken) {
-    return;
-  }
+    heartbeat = setInterval(async () => {
+      if (heartbeatInProgress || lockLost || !ownerToken) {
+        return;
+      }
 
-  heartbeatInProgress = true;
+      heartbeatInProgress = true;
 
-  try {
-    const renewed = await renewCronLock(ownerToken);
+      try {
+        const renewed = await renewCronLock(ownerToken);
 
-    if (!renewed) {
-      lockLost = true;
-      console.error("Cron lock lost. Stopping monitoring execution.");
-    }
-  } catch (error) {
-    lockLost = true;
-    console.error("Cron lock renewal failed:", error);
-  } finally {
-    heartbeatInProgress = false;
-  }
-}, 30_000);
+        if (!renewed) {
+          lockLost = true;
+          console.error("Cron lock lost. Stopping monitoring execution.");
+        }
+      } catch (error) {
+        lockLost = true;
+        console.error("Cron lock renewal failed:", error);
+      } finally {
+        heartbeatInProgress = false;
+      }
+    }, 30_000);
 
     const now = new Date();
 
@@ -87,16 +86,18 @@ const executionStartedAt = Date.now();
 
     const results = [];
     for (const monitor of monitors) {
-  if (lockLost) {
-    console.error("Cron execution stopped because lock was lost.");
-    break;
-  }
+      if (lockLost) {
+        console.error("Cron execution stopped because lock was lost.");
+        break;
+      }
       try {
         const result = await runMonitorCheck(monitor._id.toString());
 
         results.push({
           monitorId: monitor._id,
           success: true,
+          incidentManagementSuccess: !result.incidentError,
+          incidentError: result.incidentError,
           data: result,
         });
       } catch (error) {
@@ -123,6 +124,9 @@ const executionStartedAt = Date.now();
       successful: results.filter((item) => item.success).length,
       failed: results.filter((item) => !item.success).length,
       durationMs: Date.now() - executionStartedAt,
+      incidentManagementFailed: results.filter(
+        (item) => !item.incidentManagementSuccess,
+      ).length,
       results,
     });
   } catch (error) {

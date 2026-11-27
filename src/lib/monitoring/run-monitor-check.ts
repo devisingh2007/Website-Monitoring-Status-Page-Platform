@@ -51,16 +51,33 @@ export async function runMonitorCheck(monitorId: string) {
   monitor.lastResponseTime = result.responseTime;
 
   await monitor.save();
-  const incidentResult = await manageMonitorIncident({
+  
+ let incidentResult = null;
+let incidentError: string | null = null;
+
+try {
+  incidentResult = await manageMonitorIncident({
     monitorId: monitor._id.toString(),
     monitorStatus: monitor.status,
     errorMessage: result.errorMessage,
   });
+} catch (error) {
+  incidentError =
+    error instanceof Error
+      ? error.message
+      : "Incident management failed";
+
+  console.error("Incident Management Error:", {
+    monitorId: monitor._id.toString(),
+    error: incidentError,
+  });
+}
   return {
     monitorId: monitor._id,
     checkResult,
     monitorStatus: monitor.status,
     failureCount: monitor.failureCount,
     incidentResult,
+    incidentError,
   };
 }
