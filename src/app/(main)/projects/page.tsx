@@ -47,9 +47,23 @@ export default function ProjectsPage() {
     }
   }, []);
 
-  useEffect(() => {
-    void fetchProjects();
-  }, [fetchProjects]);
+
+
+    useEffect(() => {
+  let isMounted = true;
+
+  const loadProjects = async () => {
+    if (!isMounted) return;
+
+    await fetchProjects();
+  };
+
+  void loadProjects();
+
+  return () => {
+    isMounted = false;
+  };
+}, [fetchProjects]);
 
   const filteredProjects = projects.filter((project) => {
     const query = search.trim().toLowerCase();
@@ -174,7 +188,7 @@ export default function ProjectsPage() {
           {filteredProjects.map((project) => (
             <article
               key={project._id}
-              className="flex min-h-56 flex-col rounded-xl border border-slate-200 bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+              className="flex min-h-56 flex-col rounded-xl border border-slate-300 bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-blue-500 hover:shadow-md"
             >
               {/* Card Header */}
               <div className="flex items-start justify-between gap-3">

@@ -174,10 +174,7 @@ function EmptyState({ message }: { message: string }) {
 
 // -------------------- Uptime History Chart --------------------
 
-function UptimeHistoryChart({
-  data,
-  loading,
-}: {
+function UptimeHistoryChart({data,loading,}: {
   data: UptimeTrendPoint[];
   loading: boolean;
 }) {
@@ -236,7 +233,7 @@ function UptimeHistoryChart({
                   <stop
                     offset="5%"
                     stopColor="#2563eb"
-                    stopOpacity={0.25}
+                    stopOpacity={0.35}
                   />
 
                   <stop
@@ -274,12 +271,8 @@ function UptimeHistoryChart({
                   border: "1px solid #e2e8f0",
                   fontSize: "12px",
                 }}
-                formatter={(value, name) => [
-                  value ?? 0,
-                  name === "successfulChecks"
-                    ? "Successful"
-                    : "Failed",
-                ]}
+                formatter={(value, name) => [value ?? 0, name]}
+
                 labelFormatter={(label) => `Time: ${label}`}
               />
 

@@ -7,6 +7,11 @@ import { IncidentHistory } from "@/models";
 type RouteContext = {params: Promise<{ id: string }>;
 };
 
+type IncidentStatus =
+  | "investigating"
+  | "identified"
+  | "monitoring"
+  | "resolved";
 export async function GET(_request: Request,{ params }: RouteContext) {
   try {
     await connectDB();
@@ -141,13 +146,13 @@ export async function PATCH(
       );
     }
 
-    // Validate status
-    const statuses = [
-      "investigating",
-      "identified",
-      "monitoring",
-      "resolved",
-    ];
+
+const statuses: readonly IncidentStatus[] = [
+  "investigating",
+  "identified",
+  "monitoring",
+  "resolved",
+];
 
     if (
       Object.prototype.hasOwnProperty.call(body, "status") &&
@@ -172,7 +177,7 @@ export async function PATCH(
       const historyEntries: {
         incidentId: mongoose.Types.ObjectId;
         message: string;
-        status: string | null;
+        status: IncidentStatus | null;
       }[] = [];
 
       let statusChanged = false;
